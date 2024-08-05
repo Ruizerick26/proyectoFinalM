@@ -4,6 +4,8 @@ import 'package:latlong2/latlong.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:proyecto_final/schema/ubicacion.dart';
 import 'package:proyecto_final/firebase/services.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 
 class mapasV extends StatefulWidget {
   const mapasV({super.key});
@@ -13,9 +15,8 @@ class mapasV extends StatefulWidget {
 }
 
 class _mapasV extends State<mapasV> {
-
   LatLng? myPosition;
-  
+  String? nombreUsuario;
 
   Future<Position> determinePosition() async {
     LocationPermission permission;
@@ -31,7 +32,7 @@ class _mapasV extends State<mapasV> {
 
   void getCurrentLocation() async {
     Position position = await determinePosition();
-    usuario usser = new usuario(nombre: "Erick" , lat: position.latitude, log: position.longitude);
+    usuario usser = usuario(nombre: nombreUsuario ?? "Desconocido", lat: position.latitude, log: position.longitude);
     setState(() {
       myPosition = LatLng(position.latitude, position.longitude);
       subir(usser);
@@ -39,50 +40,77 @@ class _mapasV extends State<mapasV> {
     });
   }
 
-  @override
-  void initState() {
-    getCurrentLocation();
-    super.initState();
+  Future<String?> obtenerNombreUsuario() async {
+    User? usuario = FirebaseAuth.instance.currentUser;
+    if (usuario != null) {
+      DocumentSnapshot userDoc = await FirebaseFirestore.instance
+          .collection('usuarios')
+          .doc(usuario.uid)
+          .get();
+      return userDoc['nombre'] as String?;
+    }
+    return null;
   }
 
+  @override
+  void initState() {
+    super.initState();
+    obtenerNombreUsuario().then((nombre) {
+      setState(() {
+        nombreUsuario = nombre;
+        getCurrentLocation();
+      });
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
         centerTitle: true,
-        title: const Text("Usuario 1"),
-      ),
-      body: myPosition == null ?
-      const CircularProgressIndicator()
-      : FlutterMap(
-        options: MapOptions(
-          initialCenter: LatLng(myPosition!.latitude,myPosition!.longitude),
-          maxZoom: 25,
-          minZoom: 5, 
-          initialZoom: 10,
+        title: FutureBuilder<String?>(
+          future: obtenerNombreUsuario(),
+          builder: (context, snapshot) {
+            if (snapshot.connectionState == ConnectionState.waiting) {
+              return const Text("Cargando...");
+            } else if (snapshot.hasError) {
+              return const Text("Error");
+            } else if (snapshot.hasData) {
+              return Text("Usuario: ${snapshot.data}");
+            } else {
+              return const Text("Usuario desconocido");
+            }
+          },
         ),
-        children: [
-          TileLayer(
-            urlTemplate: "https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",
-            subdomains: const ['a','b','c'],
-          ),
-          MarkerLayer(
-            markers:[
-              Marker(
-                point: LatLng(myPosition!.latitude,myPosition!.longitude), 
-                child: const Icon(
-                  Icons.person_pin,
-                  color: Colors.blueAccent,
-                  size: 40,
-                  )
-
-              )
-            ]
-            )
-        ],
-      )
-      ,
+      ),
+      body: myPosition == null
+          ? const Center(child: CircularProgressIndicator())
+          : FlutterMap(
+              options: MapOptions(
+                initialCenter: LatLng(myPosition!.latitude, myPosition!.longitude),
+                maxZoom: 25,
+                minZoom: 5,
+                initialZoom: 10,
+              ),
+              children: [
+                TileLayer(
+                  urlTemplate: "https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",
+                  subdomains: const ['a', 'b', 'c'],
+                ),
+                MarkerLayer(
+                  markers: [
+                    Marker(
+                      point: LatLng(myPosition!.latitude, myPosition!.longitude),
+                      child: const Icon(
+                        Icons.person_pin,
+                        color: Colors.blueAccent,
+                        size: 40,
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            ),
     );
   }
 }
