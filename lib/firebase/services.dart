@@ -3,15 +3,13 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_database/firebase_database.dart';
 import 'package:proyecto_final/schema/ubicacion.dart';
 
-Future<void> subir(usuario usser) async{
+Future<void> subir(usuario usser, String uid) async{
   FirebaseFirestore ref2 = FirebaseFirestore.instance;
-  await ref2.collection("Usuarios").add({
+  await ref2.collection("Posiciones").doc(uid).set({
     "nombre": usser.nombre,
     "lat": usser.lat,
     "log": usser.log
   });
-  // DatabaseReference ref = FirebaseDatabase.instance.ref("Usuarios");
-  // await ref.set(usser);
   print("subido");
 }
 Future<void> actualizar(usuario usser) async{

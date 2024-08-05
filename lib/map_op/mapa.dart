@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_map/flutter_map.dart';
 import 'package:latlong2/latlong.dart';
@@ -17,9 +19,27 @@ class mapasV extends StatefulWidget {
 class _mapasV extends State<mapasV> {
   LatLng? myPosition;
   String? nombreUsuario;
+  StreamSubscription? posicion;
 
-  Future<Position> determinePosition() async {
-    LocationPermission permission;
+  // Future<Position> determinePosition() async {
+    
+  //   return await Geolocator.getCurrentPosition();
+  // }
+
+  // void getCurrentLocation() async {
+  //   Position position = await determinePosition();
+  //   User? usCt = FirebaseAuth.instance.currentUser;
+  //   usuario usser = usuario(nombre: nombreUsuario ?? "Desconocido", lat: position.latitude, log: position.longitude);
+  //   setState(() {
+  //     myPosition = LatLng(position.latitude, position.longitude);
+  //     subir(usser, usCt!.uid);
+  //     print('A $myPosition');
+  //   });
+  // }
+
+
+void _posicion() async{
+  LocationPermission permission;
     permission = await Geolocator.checkPermission();
     if (permission == LocationPermission.denied) {
       permission = await Geolocator.requestPermission();
@@ -27,18 +47,21 @@ class _mapasV extends State<mapasV> {
         return Future.error('error');
       }
     }
-    return await Geolocator.getCurrentPosition();
-  }
-
-  void getCurrentLocation() async {
-    Position position = await determinePosition();
-    usuario usser = usuario(nombre: nombreUsuario ?? "Desconocido", lat: position.latitude, log: position.longitude);
-    setState(() {
-      myPosition = LatLng(position.latitude, position.longitude);
-      subir(usser);
-      print(myPosition);
-    });
-  }
+  User? usCt = FirebaseAuth.instance.currentUser;
+  posicion = Geolocator.getPositionStream().listen(
+    (Position? position){
+      setState(() {
+        myPosition = LatLng(position!.latitude, position.longitude);
+        usuario usser = usuario(nombre: nombreUsuario ?? "Desconocido", lat: position.latitude, log: position.longitude);
+        subir(usser,usCt!.uid);
+        print(myPosition);
+      });
+    },
+    onError: (e){
+      print("On Error ${e.runtimeType}");
+    }
+  );
+}
 
   Future<String?> obtenerNombreUsuario() async {
     User? usuario = FirebaseAuth.instance.currentUser;
@@ -58,7 +81,7 @@ class _mapasV extends State<mapasV> {
     obtenerNombreUsuario().then((nombre) {
       setState(() {
         nombreUsuario = nombre;
-        getCurrentLocation();
+        _posicion();
       });
     });
   }
