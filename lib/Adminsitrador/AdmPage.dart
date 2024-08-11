@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:proyecto_final/map_op/mapa.dart'; 
+import 'package:proyecto_final/map_op/mapa.dart';
+import 'package:proyecto_final/map_op/mapa2.dart';
 
 class PaginaAdmin extends StatefulWidget {
   @override
@@ -229,9 +230,40 @@ class _PaginaAdminState extends State<PaginaAdmin> {
                     ),
               ),
               SizedBox(height: 16),
+              StreamBuilder<QuerySnapshot>(
+                stream: FirebaseFirestore.instance.collection('Posiciones').snapshots(),
+                builder: (context, snapshot) {
+                  if (snapshot.hasData) {
+                    return Column(
+                      children: snapshot.data!.docs.map((doc) {
+                        final data = doc.data() as Map<String, dynamic>?;
+
+                        // Verifica si el campo 'nombre', 'lat', y 'long' existen y si 'data' no es nulo
+                        final nombre = data != null && data.containsKey('nombre') ? data['nombre'] : 'Nombre desconocido';
+                        final lat = data != null && data.containsKey('lat') ? data['lat'] : 'Latitud no disponible';
+                        final long = data != null && data.containsKey('log') ? data['log'] : 'Longitud no disponible';
+
+                        return Card(
+                          margin: EdgeInsets.symmetric(vertical: 8),
+                          child: ListTile(
+                            contentPadding: EdgeInsets.all(16),
+                            title: Text(nombre), // Mostrar el nombre del usuario
+                            subtitle: Text('Lat: $lat, Long: $long'), // Mostrar latitud y longitud
+                          ),
+                        );
+                      }).toList(),
+                    );
+                  } else if (snapshot.hasError) {
+                    return Center(child: Text('Error: ${snapshot.error}'));
+                  } else {
+                    return Center(child: CircularProgressIndicator());
+                  }
+                },
+              ),
+              SizedBox(height: 16),
               Container(
                 height: 400, // Ajusta la altura del mapa según lo necesario
-                child: mapasV(),
+                child: mapasV2(),
               ),
             ],
           ),
