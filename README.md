@@ -20,7 +20,7 @@ Las funcionalidades implementadas en el proyecto son:
 
 ## DESPLIEGUES
 
-- [APLICACIÓN WEB]
+- [APLICACIÓN WEB](https://proyectof-ebd97.web.app/)
 - [APK](https://drive.google.com/file/d/1hefm2GL6w_p-XltrWdoMolB3UZ0HCmz9/view?usp=sharing)
 - [VIDEO EXPLICACIÓN]
 - [TIENDA DE APLICACIONES]
