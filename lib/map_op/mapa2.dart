@@ -1,9 +1,9 @@
 import 'dart:async';
+import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:flutter_map/flutter_map.dart';
 import 'package:latlong2/latlong.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:latlong2/latlong.dart' as latlng;
 
 class mapasV2 extends StatefulWidget {
   const mapasV2({super.key});
@@ -25,7 +25,6 @@ class _mapasV extends State<mapasV2> {
 
   void _fetchUserLocations() async {
     try {
-      // Escucha los cambios en la colección "Posiciones"
       FirebaseFirestore.instance.collection('Posiciones').snapshots().listen((snapshot) {
         if (snapshot.docs.isNotEmpty) {
           List<LatLng> positions = [];
@@ -59,15 +58,20 @@ class _mapasV extends State<mapasV2> {
             }
           }
 
-          if (positions.isNotEmpty) {
-            positions.add(positions.first); // Cierra el polígono
+          if (positions.length > 2) {
+            positions.add(positions.first); // Cierra el polígono si hay suficientes puntos
+            setState(() {
+              userPositions = positions;
+              markers = newMarkers;
+              polygonArea = _calculatePolygonArea(userPositions);
+            });
+          } else {
+            setState(() {
+              userPositions = positions;
+              markers = newMarkers;
+              polygonArea = 0.0; // No hay área si no hay suficiente número de puntos
+            });
           }
-
-          setState(() {
-            userPositions = positions;
-            markers = newMarkers;
-            polygonArea = _calculatePolygonArea(userPositions);
-          });
         }
       });
     } catch (e) {
@@ -79,15 +83,18 @@ class _mapasV extends State<mapasV2> {
     if (positions.length < 3) return 0.0;
 
     double area = 0.0;
-    int j = positions.length - 1;
+    double conversionFactor = 111320; // Factor de conversión de grados a metros
 
-    for (int i = 0; i < positions.length; i++) {
-      area += (positions[j].longitude + positions[i].longitude) *
-          (positions[j].latitude - positions[i].latitude);
-      j = i;
+    for (int i = 0; i < positions.length - 1; i++) {
+      double xi = positions[i].longitude * conversionFactor * cos(positions[i].latitude * pi / 180);
+      double yi = positions[i].latitude * conversionFactor;
+      double xj = positions[i + 1].longitude * conversionFactor * cos(positions[i + 1].latitude * pi / 180);
+      double yj = positions[i + 1].latitude * conversionFactor;
+
+      area += (xi * yj - xj * yi);
     }
 
-    return (area / 2).abs();
+    return area.abs() / 2.0;
   }
 
   @override
@@ -103,8 +110,8 @@ class _mapasV extends State<mapasV2> {
             Padding(
               padding: const EdgeInsets.all(16.0),
               child: Text(
-                'Área del polígono: ${polygonArea.toStringAsFixed(2)} unidades cuadradas',
-                style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                'Área del polígono: ${polygonArea.toStringAsFixed(2)} m²',
+                style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
               ),
             ),
           Expanded(

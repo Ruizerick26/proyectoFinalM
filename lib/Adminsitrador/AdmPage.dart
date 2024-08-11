@@ -238,7 +238,6 @@ class _PaginaAdminState extends State<PaginaAdmin> {
                       children: snapshot.data!.docs.map((doc) {
                         final data = doc.data() as Map<String, dynamic>?;
 
-                        // Verifica si el campo 'nombre', 'lat', y 'long' existen y si 'data' no es nulo
                         final nombre = data != null && data.containsKey('nombre') ? data['nombre'] : 'Nombre desconocido';
                         final lat = data != null && data.containsKey('lat') ? data['lat'] : 'Latitud no disponible';
                         final long = data != null && data.containsKey('log') ? data['log'] : 'Longitud no disponible';
@@ -247,8 +246,8 @@ class _PaginaAdminState extends State<PaginaAdmin> {
                           margin: EdgeInsets.symmetric(vertical: 8),
                           child: ListTile(
                             contentPadding: EdgeInsets.all(16),
-                            title: Text(nombre), // Mostrar el nombre del usuario
-                            subtitle: Text('Lat: $lat, Long: $long'), // Mostrar latitud y longitud
+                            title: Text(nombre), 
+                            subtitle: Text('Lat: $lat, Long: $long'), 
                           ),
                         );
                       }).toList(),
@@ -262,7 +261,7 @@ class _PaginaAdminState extends State<PaginaAdmin> {
               ),
               SizedBox(height: 16),
               Container(
-                height: 400, // Ajusta la altura del mapa según lo necesario
+                height: 400, 
                 child: mapasV2(),
               ),
             ],
