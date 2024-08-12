@@ -36,3 +36,8 @@ Las funcionalidades implementadas en el proyecto son:
 
 ![Imagen de WhatsApp 2024-08-10 a las 22 55 45_0d190e9d](https://github.com/user-attachments/assets/907992e4-89fa-46cc-9bae-308e11aea659)
 
+## DESPLIEGUE EN LA TIENDA
+
+![Imagen de WhatsApp 2024-08-12 a las 16 16 12_6a60fa6e](https://github.com/user-attachments/assets/3adb3202-335b-44ec-ba4c-09d29d95c3e7)
+
+
